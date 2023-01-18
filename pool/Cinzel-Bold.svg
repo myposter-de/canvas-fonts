@@ -2,7 +2,7 @@
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" >
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
 <metadata>
-Created by FontForge 20190801 at Mon Feb  8 12:13:34 2021
+Created by FontForge 20190801 at Wed Jan 18 09:25:03 2023
  By root
 Decorative
 </metadata>
@@ -131,6 +131,10 @@ d="M63 116q17 16 39.5 17.5t44.5 -10t32 -36.5q17 -38 12.5 -75.5t-25.5 -67.5t-52 -
 d="M40 325h300l8 -33l-8 -34h-300l-8 34z" />
     <glyph glyph-name="period" unicode="." horiz-adv-x="222" 
 d="M111 -10q-30 0 -51 21t-21 51q0 31 21 52t51 21q31 0 52 -21t21 -52q0 -30 -21 -51t-52 -21z" />
+    <glyph glyph-name="slash" unicode="/" horiz-adv-x="426" 
+d="M369 719l49 -22l-361 -711l-48 24z" />
+    <glyph glyph-name="slash" unicode="&#x2215;" horiz-adv-x="426" 
+d="M369 719l49 -22l-361 -711l-48 24z" />
     <glyph glyph-name="zero" unicode="0" horiz-adv-x="653" 
 d="M327 714q88 0 150.5 -45t96 -126.5t33.5 -192.5t-33.5 -192.5t-96 -126.5t-150.5 -45t-151 45t-96.5 126.5t-33.5 192.5t33.5 192.5t96.5 126.5t151 45zM327 672q-62 0 -94 -81.5t-32 -240.5t32 -240.5t94 -81.5q61 0 93 81.5t32 240.5t-32 240.5t-93 81.5z" />
     <glyph glyph-name="one" unicode="1" horiz-adv-x="393" 

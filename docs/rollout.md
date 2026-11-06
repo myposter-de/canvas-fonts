@@ -16,23 +16,49 @@
 | myposter app (iOS/Android) | `fontPathPrefix`; Android caches each font forever, 15 fonts bundled | none | permanent — not checked |
 
 ## Runbook (v1.8.0)
-1. Merge fonts-editing#2 and canvas-fonts#11, tag **v1.8.0** (canvas-text-renderer/canvas-renderer builds fail
-   until the tag exists).
-2. Merge and deploy shop-backend#8985, canvas-text-renderer#17, canvas-renderer#65, calendar-renderer#43 for every
-   brand (MP, KL, JQ). Check the deploy runs in the *-shop-production repos.
-3. tpb / CardsUSA: bump their pinned canvas-text-renderer/canvas-renderer charts to the v1.8.0 build. **Hard gate
-   for step 7.**
+
+| Step | PR / action | Merge together with | Wait before the next step until … |
+|---|---|---|---|
+| 1 | [fonts-editing#2](https://github.com/myposter-de/fonts-editing/pull/2), [canvas-fonts#11](https://github.com/myposter-de/canvas-fonts/pull/11), then tag `v1.8.0` | each other (any order) | the tag **v1.8.0** exists on canvas-fonts |
+| 2 | [shop-backend#8985](https://github.com/myposter-de/shop-backend/pull/8985), [canvas-text-renderer#17](https://github.com/myposter-de/canvas-text-renderer/pull/17), [canvas-renderer#65](https://github.com/myposter-de/canvas-renderer/pull/65), [calendar-renderer#43](https://github.com/all-in-group-com/calendar-renderer/pull/43) | each other (any order) | **all four are deployed on every brand** (MP, KL, JQ) — check the deploy runs in the *-shop-production repos |
+| 3 | tpb / CardsUSA: bump their pinned canvas-text-renderer/canvas-renderer charts (no PR yet) | can run in parallel with steps 2–6 | deployed — **hard gate for step 7** |
+| 4 | CloudFront invalidation `/web/fonts/raw/canvas/*` | — | the invalidations are *Completed* and the hash check passes |
+| 5 | [canvas-renderer-node#56](https://github.com/all-in-group-com/canvas-renderer-node/pull/56) (**squash merge**) + Kartenliebe pin, [designer-library#5867](https://github.com/myposter-de/designer-library/pull/5867) | each other (any order) | canvas-renderer-node runs on all three brands, headless-designer-service and photobook-ai-service are deployed |
+| 6 | Smoke test per brand | — | green on every brand, incl. tpb/CardsUSA |
+| 7 | Publish designer-library, bump it in every consuming app, shop-frontends EasyCollage `?v=` patch (PR still to be opened) | each other | deployed |
+| 8 | Acceptance, inform customer service | — | — |
+
+Details per step:
+1. Merge [fonts-editing#2](https://github.com/myposter-de/fonts-editing/pull/2) and
+   [canvas-fonts#11](https://github.com/myposter-de/canvas-fonts/pull/11), then create the tag **v1.8.0** on
+   canvas-fonts master. **Wait for the tag:** the Docker builds of step 2 download it and fail before it exists.
+   Nothing is live after this step — the fonts are only published.
+2. Merge [shop-backend#8985](https://github.com/myposter-de/shop-backend/pull/8985),
+   [canvas-text-renderer#17](https://github.com/myposter-de/canvas-text-renderer/pull/17),
+   [canvas-renderer#65](https://github.com/myposter-de/canvas-renderer/pull/65) and
+   [calendar-renderer#43](https://github.com/all-in-group-com/calendar-renderer/pull/43); no waiting between them
+   (backward compatible: the editor still blocks the new characters). **Wait until all of them run in production on
+   every brand** (MP, KL, JQ; failures of the downstream deploys aren't reported back — check the *-shop-production
+   runs). Check: `curl -s https://<shop>/web/fonts/raw/canvas/Lobster-Regular.ttf | shasum` equals
+   `shasum pool/Lobster-Regular.ttf` on the origin (may still be the old file at the CDN edge until step 4).
+3. tpb / CardsUSA pin their canvas-text-renderer/canvas-renderer charts separately: bump them to the v1.8.0 builds.
+   Can happen any time after step 2, **must be live before step 7**.
 4. CloudFront invalidation `/web/fonts/raw/canvas/*` on every distribution that serves fonts (all brand shop
-   domains **and** www.myposter.de, the default of the server-side loaders) — after all rollouts of step 2.
-   Verify: `curl -s https://<domain>/web/fonts/raw/canvas/Lobster-Regular.ttf | shasum` equals
-   `shasum pool/Lobster-Regular.ttf`, same for `.woff?v=v1.8.0`.
-5. Merge and deploy canvas-renderer-node#56 for **all brands** (bump Kartenliebe's pin). Merge designer-library#5867
-   (deploys headless-designer-service and photobook-ai-service; the editor package is consumed only in step 7).
+   domains **and** www.myposter.de, the default of the server-side loaders) — **only after all deploys of step 2**.
+   **Wait until every invalidation is *Completed*** (usually a few minutes) and
+   `curl -s https://<domain>/web/fonts/raw/canvas/Lobster-Regular.ttf | shasum` equals `shasum pool/Lobster-Regular.ttf`,
+   same for `.woff?v=v1.8.0`.
+5. Merge [canvas-renderer-node#56](https://github.com/all-in-group-com/canvas-renderer-node/pull/56) — **squash
+   merge** (it contains reverted diagnostic commits) — and bump Kartenliebe's pinned module version in
+   `kartenliebe/kl-shop-production` (myposter/JUNIQE deploy on merge). Merge
+   [designer-library#5867](https://github.com/myposter-de/designer-library/pull/5867) (deploys
+   headless-designer-service and photobook-ai-service; the editor package is consumed only in step 7). No waiting
+   between the two, but **only after step 4** — these request `?v=v1.8.0`. **Wait until all are deployed.**
 6. Smoke test per brand (MP, KL, JQ, tpb, CardsUSA): render "Привет Ελληνικά € ₽ ẞ ğŞİ ő" through the Node Lambda,
    each PHP canvas-text-renderer and calendar-renderer; the editor's initial data contains the font `version`, font
-   URLs carry `?v=v1.8.0`.
-7. Only when step 6 is green everywhere: publish designer-library, bump it in every consuming app, apply the
-   shop-frontends EasyCollage patch with the bump.
+   URLs carry `?v=v1.8.0`. **Do not continue until it is green everywhere.**
+7. Publish designer-library, bump it in every consuming app, open and merge the shop-frontends EasyCollage `?v=`
+   patch with the bump. From now on customers can type the new characters.
 8. Acceptance: type the sample in a card and a photobook (script font + serif font), compare editor and print file
    (same glyphs, same line breaks); one order from a non-myposter brand. Tell customer service which characters are
    supported.
